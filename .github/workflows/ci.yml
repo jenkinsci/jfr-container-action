@@ -1,0 +1,44 @@
+name: Jenkinsfile-runner actions CI
+on: [push]
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    name: syntax-check
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master      
+  jenkins-container-pipeline:
+    # Pull the Jenkinsfile-ruuner prebuilt container firstly and run all the actions in this container.
+    needs: syntax-check
+    runs-on: ubuntu-latest
+    name: jenkins-prebuilt-container-test
+    container:
+      image: ghcr.io/jenkinsci/jenkinsfile-runner:master
+    steps:
+      - uses: actions/checkout@v2
+      # Cache new plugins in /jenkins_new_plugins by hash(plugins.txt)
+      - uses: actions/cache@v3
+        id: cache-jenkins-plugins
+        name: Cache Jenkins plugins
+        with:
+          path: /jenkins_new_plugins
+          key: ${{ runner.os }}-plugins-${{ hashFiles('plugins_container.txt') }}      
+      - name: Jenkins pipeline in the container
+        id: jenkins_pipeline_container
+        uses:
+          ./
+        with:
+          command: run
+          jenkinsfile: Jenkinsfile
+          pluginstxt: plugins_container.txt
+          jcasc: jcasc.yml
+          isPluginCacheHit: ${{steps.cache-jenkins-plugins.outputs.cache-hit}}
+          initHook: groovy.init.d
+      # Upload pipeline log in /jenkinsHome/jobs/job/builds
+      - name: Upload pipeline Artifacts
+        if: ${{ github.ref == 'refs/heads/master' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: jenkins-container-pipeline-log
+          path: /jenkinsHome/jobs/job/builds
