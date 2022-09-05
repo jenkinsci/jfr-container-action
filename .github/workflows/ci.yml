@@ -17,7 +17,7 @@ jobs:
       image: ghcr.io/jenkinsci/jenkinsfile-runner:master
     steps:
       - uses: actions/checkout@v2
-      # Cache new plugins in /jenkins_new_plugins by hash(plugins.txt)
+      # Cache new installed plugins in /jenkins_new_plugins by hash(plugins.txt)
       - uses: actions/cache@v3
         id: cache-jenkins-plugins
         name: Cache Jenkins plugins
