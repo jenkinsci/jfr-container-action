@@ -1,4 +1,4 @@
-name: Jenkinsfile-runner actions CI
+name: jfr-container-action CI
 on: [push]
 jobs:
   syntax-check:
